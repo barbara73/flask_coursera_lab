@@ -46,7 +46,7 @@ def get_pictures():
 def get_picture_by_id(id):
     for picture in data:
         if picture["id"] == id:
-            return {"id": id, "message": f"{picture['id']}", "status_code": 200}
+            return picture
     return {"message": "picture not found"}, 404
 
 
@@ -57,16 +57,12 @@ def get_picture_by_id(id):
 def create_picture():
     new_picture = request.json
 
-    try:
-        for picture in data:
-            if new_picture["id"] == picture["id"]:
-                return {"id": new_picture['id'], "Message": f"picture with id {new_picture['id']} already present"}, 302
-            else:
-                data.append(new_picture)
-                return {"id": new_picture['id'], "Message": f"{new_picture['id']}"}, 201
+    for picture in data:
+        if new_picture["id"] == picture["id"]:
+            return {"Message": f"picture with id {picture['id']} already present"}, 302
 
-    except NameError:
-        return {"message": "data not defined"}, 500
+    data.append(new_picture)
+    return new_picture, 201
 
 
 ######################################################################
@@ -76,14 +72,16 @@ def create_picture():
 
 @app.route("/picture/<int:id>", methods=["PUT"])
 def update_picture(id):
-    new_picture = request.json
 
-    for picture in data:
-        if picture['id'] == id:
+    # get data from the json body
+    picture_in = request.json
 
-            return {"event_state": new_picture["event_state"]}, 200
-        else:
-            return {"message": "picture not found"}, 404
+    for index, picture in enumerate(data):
+        if picture["id"] == id:
+            data[index] = picture_in
+            return picture, 201
+
+    return {"message": "picture not found"}, 404
 
 
 ######################################################################
@@ -94,5 +92,5 @@ def delete_picture(id):
     for picture in data:
         if picture["id"] == id:
             data.remove(picture)
-            return {}, 204
+            return "", 204
     return {"message": "picture not found"}, 404
